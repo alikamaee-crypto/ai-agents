@@ -1,5 +1,6 @@
 import json
 import time
+from datetime import datetime
 
 class AIAgent:
     def __init__(self, name, role, system_instruction):
@@ -7,37 +8,48 @@ class AIAgent:
         self.role = role
         self.instruction = system_instruction
         self.memory = []
-        print(f"[*] Agent '{self.name}' initialized successfully with role: {self.role}")
+        print(f"[*] Agent '{self.name}' initialized as {self.role}.")
 
-    def execute_task(self, task_input):
-        print(f"\n[+] Processing task: {task_input}")
-        print("[*] Thinking, analyzing rules, and preparing response...")
-        time.sleep(1)
+    def log_to_file(self, data):
+        with open("execution_logs.txt", "a", encoding="utf-8") as file:
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            file.write(f"[{timestamp}] {data}\n")
+
+    def process_task(self, task_input):
+        print(f"\n[+] Analyzing request: '{task_input}'")
+        time.sleep(0.3)
         
-        # ذخیره ورودی در حافظه تعاملی ایجنت
         self.memory.append({"role": "user", "content": task_input})
         
-        # خروجی پردازش‌شده
-        result = {
-            "agent_name": self.name,
+        analysis_result = {
+            "agent": self.name,
             "role": self.role,
-            "instruction_applied": self.instruction,
-            "status": "COMPLETED",
-            "output_data": f"Task '{task_input}' analyzed. Ready for LLM pipeline."
+            "task": task_input,
+            "decision": "APPROVED_FOR_EXECUTION",
+            "memory_depth": len(self.memory)
         }
         
-        # ذخیره خروجی در حافظه
-        self.memory.append({"role": "assistant", "content": result["output_data"]})
-        return json.dumps(result, indent=2)
+        self.memory.append({"role": "system", "content": analysis_result["decision"]})
+        
+        json_output = json.dumps(analysis_result, indent=2)
+        self.log_to_file(json_output)
+        return json_output
 
 if __name__ == "__main__":
-    market_agent = AIAgent(
-        name="CryptoSense", 
-        role="Quantitative Market Analyst",
-        system_instruction="Strict risk management and zero emotional bias."
+    agent = AIAgent(
+        name="Nexus-Trader",
+        role="Automated Strategy Executor",
+        system_instruction="Analyze and execute trade signals with strict risk limits."
     )
     
-    execution_result = market_agent.execute_task("Analyze BTC/USDT 4H momentum")
-    print("\n--- EXECUTION REPORT ---")
-    print(execution_result)
-    print("\nAgent Memory Count:", len(market_agent.memory), "messages")
+    tasks = [
+        "Check BTC liquidity on Binance",
+        "Evaluate ETH/USDT risk-reward ratio",
+        "Generate risk report for portfolio"
+    ]
+    
+    for item in tasks:
+        output = agent.process_task(item)
+        print(output)
+        
+    print("\n[✓] All logs successfully written to 'execution_logs.txt'")
