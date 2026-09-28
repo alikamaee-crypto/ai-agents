@@ -1,0 +1,5 @@
+geckodriver.exe
+__pycache__/
+*.log
+*.whl
+*.stackdump
